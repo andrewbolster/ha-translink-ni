@@ -80,24 +80,41 @@ content: >
 
 ## Automations
 
-**Leave-now reminder, 6 minutes before the next bus actually leaves:**
+**Phone notification 5 minutes before the next bus leaves:**
+
+The trigger uses the sensor's state (the *expected* time), so a late bus alerts you later.
+The message shows the scheduled time and the delay when the bus is running late, e.g.
+*"🚌 11e to Belfast, CastleCourt in 5 min · Scheduled 11:55, now 12:00 (+5 min)"*.
 
 ```yaml
+alias: "Bus: 5 minute warning (Cambria Street)"
+mode: single
 triggers:
   - trigger: time
     at:
       entity_id: sensor.shankill_cambria_street_next_departure
-      offset: "-00:06:00"
+      offset: "-00:05:00"
 conditions:
+  # Without a condition this fires before every bus, all day. Limit it to your commute:
   - condition: time
     weekday: [mon, tue, wed, thu, fri]
     after: "07:30:00"
     before: "09:30:00"
 actions:
-  - action: notify.notify
+  - variables:
+      s: sensor.shankill_cambria_street_next_departure
+      expected: "{{ as_local(as_datetime(states(s))).strftime('%H:%M') }}"
+      scheduled: "{{ as_local(as_datetime(state_attr(s, 'scheduled'))).strftime('%H:%M') }}"
+      late: "{{ state_attr(s, 'delay_minutes') | int(0) }}"
+  - action: notify.mobile_app_your_phone # your phone's notify action
     data:
+      title: "🚌 {{ state_attr(s, 'service') }} to {{ state_attr(s, 'destination') }} in 5 min"
       message: >
-        {{ state_attr('sensor.shankill_cambria_street_next_departure', 'service') }} leaves in 6 min
+        {% if late %}Scheduled {{ scheduled }}, now {{ expected }} (+{{ late }} min)
+        {% else %}Leaves at {{ expected }}{% endif %}
+      data:
+        tag: bus_cambria # replaces the previous alert instead of stacking
+        channel: Buses # Android: own notification channel/sound
 ```
 
 **Every departure, via the calendar** (fires for each bus, not just the next):
