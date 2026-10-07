@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": { "next_departure": { "default": "mdi:bus-clock" } },
+    "calendar": { "departures": { "default": "mdi:bus-stop" } }
+  },
+  "services": {
+    "get_departures": { "service": "mdi:format-list-bulleted" }
+  }
+}

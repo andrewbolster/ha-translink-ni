@@ -1,0 +1,17 @@
+get_departures:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: translink_ni
+    count:
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    start:
+      selector:
+        datetime:

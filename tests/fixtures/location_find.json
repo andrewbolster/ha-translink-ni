@@ -1,0 +1,14 @@
+{
+ "Locations": [
+  {
+   "Id": "10012778",
+   "Name": "Shankill, Cambria Street",
+   "LocationType": "Bus stop"
+  },
+  {
+   "Id": "10011045",
+   "Name": "Shankill, Flax Street",
+   "LocationType": "Bus stop"
+  }
+ ]
+}
