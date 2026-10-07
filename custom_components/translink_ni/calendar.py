@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .api import Departure, TranslinkError
-from .const import CALENDAR_MAX_PAGES, CALENDAR_MAX_RANGE
-from .coordinator import TranslinkConfigEntry, TranslinkCoordinator
+from .const import CALENDAR_MAX_PAGES, CALENDAR_MAX_RANGE, DOMAIN
 from .entity import TranslinkEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+    from .coordinator import TranslinkConfigEntry, TranslinkCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -22,7 +26,7 @@ EVENT_LENGTH = timedelta(minutes=1)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001
     entry: TranslinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -53,16 +57,22 @@ class DeparturesCalendar(TranslinkEntity, CalendarEntity):
     _attr_translation_key = "departures"
 
     def __init__(self, coordinator: TranslinkCoordinator) -> None:
+        """Create the calendar for a stop."""
         super().__init__(coordinator, "departures")
 
     @property
     def event(self) -> CalendarEvent | None:
+        """The next departure, as an event."""
         nxt = self.coordinator.next_departure
         return _to_event(nxt) if nxt else None
 
     async def async_get_events(
-        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+        self,
+        hass: HomeAssistant,  # noqa: ARG002 (calendar API signature)
+        start_date: datetime,
+        end_date: datetime,
     ) -> list[CalendarEvent]:
+        """Departures within a window (upcoming only; the API has no history)."""
         now = dt_util.utcnow()
         start = max(dt_util.as_utc(start_date), now - EVENT_LENGTH)
         end = min(dt_util.as_utc(end_date), now + CALENDAR_MAX_RANGE)
@@ -79,7 +89,11 @@ class DeparturesCalendar(TranslinkEntity, CalendarEntity):
                     after=start, until=end, max_pages=CALENDAR_MAX_PAGES
                 )
             except TranslinkError as err:
-                raise HomeAssistantError(f"Translink request failed: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="request_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
         return [
             _to_event(d) for d in deps if start <= d.expected + EVENT_LENGTH and d.expected <= end

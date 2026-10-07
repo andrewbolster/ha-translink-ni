@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
@@ -15,6 +15,9 @@ from custom_components.translink_ni.const import DOMAIN
 from custom_components.translink_ni.sensor import NextDepartureSensor
 
 from .conftest import CAPTURED_AT, load
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 pytestmark = pytest.mark.freeze_time(CAPTURED_AT)
 

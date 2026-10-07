@@ -1,0 +1,42 @@
+# Based on https://github.com/ludeeus/integration_blueprint (itself based on HA core's pyproject.toml)
+
+target-version = "py314"
+line-length = 100
+
+[lint]
+select = ["ALL"]
+
+ignore = [
+    "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+    "D203",   # no-blank-line-before-class (incompatible with formatter)
+    "D212",   # multi-line-summary-first-line (incompatible with formatter)
+    "COM812", # incompatible with formatter
+    "ISC001", # incompatible with formatter
+    "CPY001", # preview rule; HA core does not use per-file copyright headers
+]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # asserts are the point of tests
+    "PLR2004", # magic values in expected results
+    "SLF001",  # tests may poke private attributes
+    "ARG001",  # fixtures requested only for their side effects
+    "D103",    # test function docstrings
+    "INP001",  # tests/ is a package via __init__.py already
+    "ANN",     # fixtures/tests are not type-annotated (HA core convention)
+    "D102", "D107",
+    "PLR0913", "PLR0917",  # tests take many fixtures
+]
+"scripts/**" = [
+    "T201", "INP001",
+    "S603", "S607",  # fixed rsvg-convert invocation
+]
+
+[lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[lint.pyupgrade]
+keep-runtime-typing = true
+
+[lint.mccabe]
+max-complexity = 25

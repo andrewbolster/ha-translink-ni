@@ -16,6 +16,7 @@ class TranslinkEntity(CoordinatorEntity[TranslinkCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: TranslinkCoordinator, key: str) -> None:
+        """Attach to the stop's coordinator and device."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.stop_id}_{key}"
         self._attr_device_info = DeviceInfo(

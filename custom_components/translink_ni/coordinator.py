@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -21,6 +21,9 @@ from .const import (
     DOMAIN,
 )
 
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
 _LOGGER = logging.getLogger(__name__)
 
 type TranslinkConfigEntry = ConfigEntry[TranslinkCoordinator]
@@ -34,6 +37,7 @@ class TranslinkCoordinator(DataUpdateCoordinator[list[Departure]]):
     def __init__(
         self, hass: HomeAssistant, entry: TranslinkConfigEntry, client: TranslinkClient
     ) -> None:
+        """Set up polling for one stop."""
         super().__init__(
             hass,
             _LOGGER,
@@ -53,7 +57,7 @@ class TranslinkCoordinator(DataUpdateCoordinator[list[Departure]]):
         return {s.lower() for s in self.config_entry.options.get(CONF_SERVICES, [])}
 
     def matches(self, dep: Departure) -> bool:
-        """True if the departure passes this stop's service filter."""
+        """Return True if the departure passes this stop's service filter."""
         return not self.services or dep.service.lower() in self.services
 
     async def fetch(

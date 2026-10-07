@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
@@ -16,7 +17,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .api import PAGE_SIZE, TranslinkClient, TranslinkError
@@ -28,6 +28,9 @@ from .const import (
     SERVICE_GET_DEPARTURES,
 )
 from .coordinator import TranslinkConfigEntry, TranslinkCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
@@ -42,7 +45,7 @@ GET_DEPARTURES_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: ARG001
     """Register the get_departures action."""
 
     async def get_departures(call: ServiceCall) -> ServiceResponse:
@@ -72,7 +75,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     after=after, max_pages=min(math.ceil(count / PAGE_SIZE) + 1, 8)
                 )
             except TranslinkError as err:
-                raise HomeAssistantError(f"Translink request failed: {err}") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="request_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
         return {
             "stop_id": coordinator.stop_id,

@@ -1,0 +1,42 @@
+name: Release
+
+# Publishing a GitHub release (tag vX.Y.Z) stamps that version into manifest.json
+# and attaches translink_ni.zip, which HACS installs (hacs.json: zip_release).
+
+on:
+  release:
+    types:
+      - published
+
+permissions: {}
+
+jobs:
+  release:
+    name: "Build release asset"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set manifest version from tag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          jq --arg v "$version" '.version = $v' custom_components/translink_ni/manifest.json > manifest.tmp
+          mv manifest.tmp custom_components/translink_ni/manifest.json
+          grep '"version"' custom_components/translink_ni/manifest.json
+
+      - name: Zip the integration
+        working-directory: custom_components/translink_ni
+        run: zip -r "${GITHUB_WORKSPACE}/translink_ni.zip" . -x "__pycache__/*"
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" translink_ni.zip --clobber --repo "$GITHUB_REPOSITORY"

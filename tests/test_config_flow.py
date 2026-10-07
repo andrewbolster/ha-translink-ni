@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.translink_ni.api import DEPARTURES_URL, LOCATION_URL
@@ -18,6 +19,9 @@ from custom_components.translink_ni.const import (
 
 from .conftest import CAPTURED_AT, load
 
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
 pytestmark = pytest.mark.freeze_time(CAPTURED_AT)
 
 
@@ -28,7 +32,8 @@ async def test_search_pick_filter_creates_entry(hass: HomeAssistant, aioclient_m
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM and result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"query": "Cambria Street"}
@@ -82,7 +87,8 @@ async def test_duplicate_stop_aborts(hass: HomeAssistant, aioclient_mock, cambri
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STOP_ID: "10012778"}
     )
-    assert result["type"] is FlowResultType.ABORT and result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_options_flow(hass: HomeAssistant, aioclient_mock, cambria_entry) -> None:

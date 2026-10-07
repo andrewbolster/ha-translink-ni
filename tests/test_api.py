@@ -25,7 +25,8 @@ def test_ticks_are_utc():
 
 def test_parse_cambria_drops_cancelled_and_keeps_delays():
     raw = load("departures_cambria.json")["Result"]["Departures"]
-    assert len(raw) == 8 and sum(d["IsCancelled"] for d in raw) == 1
+    assert len(raw) == 8
+    assert sum(d["IsCancelled"] for d in raw) == 1
 
     deps = parse_departures(raw)
 
@@ -61,7 +62,8 @@ def test_as_dict_is_json_friendly():
     assert data["planned"] == "2026-10-07T09:55:00+00:00"
     assert data["expected"] == "2026-10-07T10:00:00+00:00"
     assert data["delay_minutes"] == 5
-    assert "is_real_time" not in data and "is_cancelled" not in data
+    assert "is_real_time" not in data
+    assert "is_cancelled" not in data
 
 
 class _Resp:
@@ -77,7 +79,7 @@ class _Resp:
     def raise_for_status(self) -> None:
         pass
 
-    async def json(self, content_type=None):
+    async def json(self, content_type=None):  # noqa: ARG002 (aiohttp signature)
         return self._payload
 
 
@@ -88,7 +90,7 @@ class FakeSession:
         self.payloads = list(payloads)
         self.bodies: list[dict] = []
 
-    def request(self, method: str, url: str, **kwargs: Any) -> _Resp:
+    def request(self, method: str, url: str, **kwargs: Any) -> _Resp:  # noqa: ARG002
         assert url == DEPARTURES_URL
         self.bodies.append(kwargs["json"])
         return _Resp(self.payloads.pop(0) if self.payloads else {"ResponseCode": 200, "Result": {}})

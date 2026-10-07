@@ -29,7 +29,7 @@ def load(name: str) -> Any:
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Allow loading custom_components/ in every test."""
-    yield
+    return
 
 
 @pytest.fixture

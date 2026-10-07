@@ -1,0 +1,11 @@
+# Local development instance (scripts/develop)
+# https://www.home-assistant.io/integrations/default_config/
+default_config:
+
+homeassistant:
+  debug: true
+
+logger:
+  default: info
+  logs:
+    custom_components.translink_ni: debug

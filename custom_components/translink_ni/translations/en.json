@@ -52,6 +52,7 @@
   },
   "exceptions": {
     "invalid_config_entry": { "message": "That isn't a Translink NI stop." },
-    "entry_not_loaded": { "message": "That Translink stop isn't currently loaded." }
+    "entry_not_loaded": { "message": "That Translink stop isn't currently loaded." },
+    "request_failed": { "message": "Translink request failed: {error}" }
   }
 }

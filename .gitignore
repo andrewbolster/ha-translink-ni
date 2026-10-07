@@ -2,3 +2,7 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+
+# Local dev HA instance: only keep the config file
+config/*
+!config/configuration.yaml

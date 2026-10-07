@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import Template
 
 from custom_components.translink_ni.api import DEPARTURES_URL
 
 from .conftest import load
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 README = Path(__file__).parent.parent / "README.md"
 

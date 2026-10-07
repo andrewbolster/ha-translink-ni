@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -29,7 +29,9 @@ from .const import (
     DOMAIN,
     MIN_SCAN_INTERVAL,
 )
-from .coordinator import TranslinkConfigEntry
+
+if TYPE_CHECKING:
+    from .coordinator import TranslinkConfigEntry
 
 CONF_QUERY = "query"
 
@@ -60,6 +62,7 @@ class TranslinkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
+        """Start a new flow."""
         self._stops: dict[str, Stop] = {}
         self._stop: Stop | None = None
         self._services: list[str] = []
@@ -113,7 +116,8 @@ class TranslinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step 3: optionally limit to some services."""
-        assert self._stop is not None
+        if self._stop is None:  # pragma: no cover - only reachable via a crafted flow
+            return await self.async_step_user()
         if user_input is not None:
             return self.async_create_entry(
                 title=self._stop.name,
@@ -133,7 +137,9 @@ class TranslinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: TranslinkConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: TranslinkConfigEntry,  # noqa: ARG004 (HA signature)
+    ) -> OptionsFlow:
         """Options: service filter and polling interval."""
         return TranslinkOptionsFlow()
 
@@ -142,6 +148,7 @@ class TranslinkOptionsFlow(OptionsFlow):
     """Change filter / polling for an existing stop."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Show/save the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
         opts = self.config_entry.options

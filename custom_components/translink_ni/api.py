@@ -1,4 +1,5 @@
-"""Minimal async client for Translink NI's journey planner endpoints.
+"""
+Minimal async client for Translink NI's journey planner endpoints.
 
 These are the (undocumented) endpoints behind translink.co.uk's own stop
 search and departure boards. No API key is required.
@@ -54,7 +55,8 @@ class Stop:
 
 @dataclass(frozen=True, slots=True)
 class Departure:
-    """A single (non-cancelled) departure from a stop.
+    """
+    A single (non-cancelled) departure from a stop.
 
     ``IsRealTime`` is deliberately not carried: it is true for every departure
     the API returns, so it says nothing about whether a bus is being tracked.
@@ -86,7 +88,8 @@ def ticks_to_datetime(ticks: int) -> datetime:
 
 
 def _clean_service(name: str) -> str:
-    """'Bus 11e' -> '11e', 'Glider G1' -> 'G1'.
+    """
+    'Bus 11e' -> '11e', 'Glider G1' -> 'G1'.
 
     Rail services are route descriptions ('Rail Belfast - Dublin (Enterprise)')
     so only the mode word is stripped.
@@ -98,7 +101,8 @@ def _clean_service(name: str) -> str:
 
 
 def parse_departures(raw: list[dict[str, Any]]) -> list[Departure]:
-    """Parse the ``Result.Departures`` array.
+    """
+    Parse the ``Result.Departures`` array.
 
     Cancelled departures are dropped: a cancelled bus is never useful as a
     "next departure", and the flag is rare (and occasionally withdrawn later).
@@ -129,6 +133,7 @@ class TranslinkClient:
     """Async client for stop search and departures."""
 
     def __init__(self, session: aiohttp.ClientSession) -> None:
+        """Use the given aiohttp session (Home Assistant's shared one in practice)."""
         self._session = session
 
     async def _request(self, method: str, url: str, **kwargs: Any) -> Any:
@@ -140,9 +145,11 @@ class TranslinkClient:
                 resp.raise_for_status()
                 return await resp.json(content_type=None)
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise TranslinkConnectionError(f"{method} {url} failed: {err}") from err
+            msg = f"{method} {url} failed: {err}"
+            raise TranslinkConnectionError(msg) from err
         except ValueError as err:
-            raise TranslinkResponseError(f"{url} returned invalid JSON") from err
+            msg = f"{url} returned invalid JSON"
+            raise TranslinkResponseError(msg) from err
 
     async def search_stops(self, query: str) -> list[Stop]:
         """Find stops whose name matches ``query``."""
@@ -150,7 +157,8 @@ class TranslinkClient:
             "GET", LOCATION_URL, params={"SearchString": query, "StopsOnly": "true"}
         )
         if not isinstance(data, dict):
-            raise TranslinkResponseError("Unexpected stop search response")
+            msg = "Unexpected stop search response"
+            raise TranslinkResponseError(msg)
         return [
             Stop(id=str(loc["Id"]), name=loc.get("Name") or str(loc["Id"]))
             for loc in data.get("Locations") or []
@@ -169,7 +177,8 @@ class TranslinkClient:
         }
         data = await self._request("POST", DEPARTURES_URL, json=payload)
         if not isinstance(data, dict) or data.get("ResponseCode") not in (200, None):
-            raise TranslinkResponseError(f"Unexpected departures response: {data!r:.200}")
+            msg = f"Unexpected departures response: {data!r:.200}"
+            raise TranslinkResponseError(msg)
         raw = (data.get("Result") or {}).get("Departures") or []
         last = None
         ticks = [d.get("SysActualDepartureDate") for d in raw if d.get("SysActualDepartureDate")]
@@ -185,7 +194,8 @@ class TranslinkClient:
         until: datetime | None = None,
         max_pages: int = 2,
     ) -> list[Departure]:
-        """Upcoming departures from ``stop_id``, oldest first.
+        """
+        Upcoming departures from ``stop_id``, oldest first.
 
         Fetches up to ``max_pages`` pages of 8, stopping early once ``until`` is
         passed. Duplicates across pages are removed on (service, destination,
